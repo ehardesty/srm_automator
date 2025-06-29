@@ -40,6 +40,11 @@ class SteamROMManagerGUI:
         self.status = ProcessStatus.READY
         self.process_count = 0  # Track how many times process has run
         
+        # Auto-close state management
+        self.auto_close_cancelled = False  # Session-persistent cancellation
+        self.countdown_after_id = None  # For cancelling countdown timer
+        self.default_title = "Steam ROM Manager Automation"
+        
         # Initialize managers
         self.steam_manager = SteamManager(self.config.timeout_steam)
         self.theme_manager = ThemeManager()
@@ -115,7 +120,8 @@ class SteamROMManagerGUI:
         self.log_section = LogSection(main_frame)
         
         # Connect logger to UI
-        self.logger.set_ui_callback(self.log_message)
+        if hasattr(self.logger, 'set_ui_callback'):
+            self.logger.set_ui_callback(self.log_message)
     
     def _initialize_app(self):
         """Initialize the application after UI setup"""
@@ -217,6 +223,59 @@ class SteamROMManagerGUI:
         """Update visual status indicator"""
         self.status = status
         self.simple_components.update_status(status)
+    
+    def _update_title(self, suffix: str = ""):
+        """Update window title with optional suffix"""
+        if suffix:
+            self.root.title(f"{self.default_title} - {suffix}")
+        else:
+            self.root.title(self.default_title)
+    
+    def _bind_shift_keys(self):
+        """Bind Shift key events for auto-close cancellation"""
+        self.root.bind_all('<KeyPress-Shift_L>', self._on_shift_press)
+        self.root.bind_all('<KeyPress-Shift_R>', self._on_shift_press)
+    
+    def _unbind_shift_keys(self):
+        """Unbind Shift key events"""
+        self.root.unbind_all('<KeyPress-Shift_L>')
+        self.root.unbind_all('<KeyPress-Shift_R>')
+    
+    def _on_shift_press(self, event):
+        """Handle Shift key press to cancel auto-close"""
+        if not self.auto_close_cancelled and self.config.auto_close_on_success:
+            self.auto_close_cancelled = True
+            self._update_title("Auto-close OFF")
+            self.log_message("Auto-close cancelled by user", LogLevel.INFO)
+            
+            # Cancel countdown if running
+            if self.countdown_after_id:
+                self.root.after_cancel(self.countdown_after_id)
+                self.countdown_after_id = None
+    
+    def _start_auto_close_countdown(self):
+        """Start the auto-close countdown"""
+        self._countdown_step(self.config.auto_close_delay)
+    
+    def _countdown_step(self, seconds_left: int):
+        """Countdown step - called recursively"""
+        if self.auto_close_cancelled:
+            # Countdown was cancelled
+            self.countdown_after_id = None
+            return
+        
+        if seconds_left <= 0:
+            # Time's up - close the application
+            self.countdown_after_id = None
+            self._update_title()
+            self.root.quit()
+            return
+        
+        # Update title with countdown
+        self._update_title(f"Closing in {seconds_left}s (SHIFT to cancel)")
+        
+        # Schedule next countdown step
+        self.countdown_after_id = self.root.after(1000, lambda: self._countdown_step(seconds_left - 1))
     def automation_process(self):
         """Main automation process"""
         start_time = time.time()
@@ -275,6 +334,10 @@ class SteamROMManagerGUI:
                 if output:
                     self.logger.info(f"SRM output: {output}")
                 self._update_status_indicator(ProcessStatus.SUCCESS)
+                
+                # Start auto-close countdown if enabled and not cancelled
+                if self.config.auto_close_on_success and not self.auto_close_cancelled:
+                    self._start_auto_close_countdown()
             else:
                 self.update_progress(4, 0, "Process failed - see log for details", "✗")
                 self.log_message("✗ Steam ROM Manager failed!", LogLevel.ERROR)
@@ -297,6 +360,12 @@ class SteamROMManagerGUI:
             self._update_status_indicator(ProcessStatus.FAILED)
         finally:
             self.simple_components.set_start_button_state(tk.NORMAL)
+            self._unbind_shift_keys()
+            
+            # Reset title if auto-close is not running
+            if not self.countdown_after_id:
+                self._update_title()
+                
             self.logger.info("Automation process finished")
     def start_process(self):
         """Start the automation process"""
@@ -315,6 +384,13 @@ class SteamROMManagerGUI:
         self.process_count += 1
         self.log_message("🚀 Starting Steam ROM Manager automation...", LogLevel.INFO)
         
+        # Setup auto-close if enabled and not already cancelled
+        if self.config.auto_close_on_success and not self.auto_close_cancelled:
+            self._update_title("Auto-close ON (SHIFT to cancel)")
+            self._bind_shift_keys()
+        elif self.config.auto_close_on_success and self.auto_close_cancelled:
+            self._update_title("Auto-close OFF")
+        
         # Start in separate thread
         thread = threading.Thread(target=self.automation_process, daemon=True)
         thread.start()
@@ -327,6 +403,9 @@ class SteamROMManagerGUI:
             logger=self.log_message
         )
         settings_dialog.show()
+        
+        # Refresh config reference in case auto-close settings changed
+        self.config = self.config_manager.config
         
         # Update SRM runner if path changed
         new_path = self.config_manager.config.srm_path

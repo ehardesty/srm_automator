@@ -19,6 +19,8 @@ Perfect for retro gaming enthusiasts who want to streamline adding emulated game
 - ⚙️ **Auto-detection** of Steam and SRM installations
 - 📊 **Comprehensive logging** with colored output
 - 🛠️ **Settings dialog** for easy configuration
+- ⚡ **Auto-start option** - Begin running Steam Rom Manager immediately on app launch
+- 🔚 **Auto-close on success** - Configurable auto-close on success with a user bypass
 
 ## Screenshots
 
@@ -49,7 +51,7 @@ Perfect for retro gaming enthusiasts who want to streamline adding emulated game
 
 1. The app will auto-detect Steam ROM Manager on first launch
 2. If not found, click **Settings** to set the SRM path manually
-3. Click **Start Process** to begin automation
+3. Click **Start Process** to begin automation (or enable auto-start in Settings)
 4. Watch the progress and check the log for details
 
 ## Requirements
@@ -73,12 +75,37 @@ Perfect for retro gaming enthusiasts who want to streamline adding emulated game
 The app stores settings in the Windows user directory:
 - **Windows:** `%LOCALAPPDATA%\SRM-Automation\SRM Automation\`
 
+### Available Settings
+- **Auto-start** - Automatically begin the automation process when the app launches
+- **Auto-close on success** - Automatically close the app after successful completion
+- **Auto-close delay** - Configurable delay (1-60 seconds) before auto-close
+- **Theme** - Auto-detect, light, or dark mode
+- **Timeouts** - Customizable timeouts for Steam and SRM operations
+- **Logging level** - Control detail level of log output
+
+### Auto-Start Feature
+Enable auto-start in Settings to have the automation begin immediately when you launch the app. Perfect for:
+- Quick ROM updates without manual interaction
+- Integration with other automation scripts
+- Streamlined workflow for frequent use
+
+### Auto-Close Feature
+The auto-close feature automatically closes the application after successful completion:
+- **Success only** - Never closes on failures, only successful operations
+- **Configurable delay** - Set 1-60 second countdown (default: 5 seconds)
+- **User bypass** - Press Shift key anytime to cancel auto-close
+- **Visual feedback** - Title bar shows countdown and cancellation option
+
+Perfect for unattended operation or when integrating with other tools.
+
 ### Environment Variables
 Override settings using environment variables with `SRM_` prefix:
 ```bash
 SRM_THEME=dark
 SRM_AUTO_START=true
 SRM_LOG_LEVEL=debug
+SRM_AUTO_CLOSE_ON_SUCCESS=true
+SRM_AUTO_CLOSE_DELAY=10
 ```
 
 ## How It Works
@@ -123,6 +150,11 @@ srm-automation/
 **"Permission errors"**
 - Run as administrator if needed
 - Check file permissions on config directory
+
+**"Auto-close not working"**
+- Only auto-closes after successful completion (never on failures)
+- Check if Shift key was pressed (cancels auto-close for the session)
+- Verify auto-close is enabled in Settings
 
 ### Logs
 Check `error.log` in the app directory for detailed information about any issues.

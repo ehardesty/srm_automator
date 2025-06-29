@@ -21,6 +21,9 @@ class SettingsDialog:
         self.logger = logger
         self.window = None
         self.path_var = None
+        self.auto_start_var = None
+        self.auto_close_var = None
+        self.auto_close_delay_var = None
     
     def _validate_srm_path(self, path: str) -> Tuple[bool, str]:
         """Simple SRM path validation"""
@@ -57,7 +60,7 @@ class SettingsDialog:
         """Create the settings dialog window"""
         self.window = tk.Toplevel(self.parent)
         self.window.title("Settings")
-        self.window.geometry("500x200")
+        self.window.geometry("500x375")
         self.window.resizable(False, False)
         
         frame = ttk.Frame(self.window, padding="20")
@@ -79,6 +82,53 @@ class SettingsDialog:
         # Auto-detect button
         detect_button = ttk.Button(frame, text="Auto-detect", command=self._auto_detect_path)
         detect_button.pack(anchor=tk.W, pady=(0, 20))
+        
+        # Application behavior settings
+        ttk.Label(frame, text="Application Behavior:").pack(anchor=tk.W, pady=(0, 5))
+        
+        # Auto-start checkbox
+        self.auto_start_var = tk.BooleanVar(value=self.config_manager.config.auto_start)
+        auto_start_check = ttk.Checkbutton(
+            frame, 
+            text="Auto-start process when application opens",
+            variable=self.auto_start_var
+        )
+        auto_start_check.pack(anchor=tk.W, pady=(0, 15))
+        
+        # Auto-close settings
+        ttk.Label(frame, text="Auto-close Settings:").pack(anchor=tk.W, pady=(0, 5))
+        
+        # Auto-close checkbox
+        self.auto_close_var = tk.BooleanVar(value=self.config_manager.config.auto_close_on_success)
+        auto_close_check = ttk.Checkbutton(
+            frame, 
+            text="Auto-close application after successful completion",
+            variable=self.auto_close_var,
+            command=self._on_auto_close_toggle
+        )
+        auto_close_check.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Auto-close delay setting
+        delay_frame = ttk.Frame(frame)
+        delay_frame.pack(fill=tk.X, pady=(0, 20))
+        
+        ttk.Label(delay_frame, text="Delay before auto-close:").pack(side=tk.LEFT)
+        
+        self.auto_close_delay_var = tk.IntVar(value=self.config_manager.config.auto_close_delay)
+        delay_spinbox = ttk.Spinbox(
+            delay_frame,
+            from_=1,
+            to=60,
+            width=5,
+            textvariable=self.auto_close_delay_var
+        )
+        delay_spinbox.pack(side=tk.LEFT, padx=(10, 5))
+        
+        ttk.Label(delay_frame, text="seconds").pack(side=tk.LEFT)
+        
+        # Initially disable delay if auto-close is off
+        self.delay_spinbox = delay_spinbox
+        self._on_auto_close_toggle()
         
         # Save/Cancel buttons
         button_frame = ttk.Frame(frame)
@@ -106,6 +156,14 @@ class SettingsDialog:
             if self.logger:
                 self.logger("✗ Could not auto-detect SRM installation", LogLevel.ERROR)
     
+    def _on_auto_close_toggle(self):
+        """Handle auto-close checkbox toggle"""
+        if hasattr(self, 'delay_spinbox'):
+            if self.auto_close_var.get():
+                self.delay_spinbox.config(state='normal')
+            else:
+                self.delay_spinbox.config(state='disabled')
+    
     def _save_settings(self):
         """Save settings and update configuration"""
         new_path = self.path_var.get()
@@ -118,11 +176,20 @@ class SettingsDialog:
         
         # Update configuration
         self.config_manager.config.srm_path = new_path
+        self.config_manager.config.auto_start = self.auto_start_var.get()
+        self.config_manager.config.auto_close_on_success = self.auto_close_var.get()
+        self.config_manager.config.auto_close_delay = self.auto_close_delay_var.get()
+        
         success = self.config_manager.save_config()
         
         if success:
             if self.logger:
                 self.logger(f"✓ Settings saved. SRM path: {new_path}", LogLevel.SUCCESS)
+                self.logger(f"✓ Auto-start: {'enabled' if self.auto_start_var.get() else 'disabled'}", LogLevel.SUCCESS)
+                if self.auto_close_var.get():
+                    self.logger(f"✓ Auto-close enabled with {self.auto_close_delay_var.get()}s delay", LogLevel.SUCCESS)
+                else:
+                    self.logger("✓ Auto-close disabled", LogLevel.SUCCESS)
             self.window.destroy()
         else:
             # Error already logged by ConfigManager, just show dialog

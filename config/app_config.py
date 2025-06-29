@@ -19,6 +19,8 @@ class AppConfig(BaseSettings):
     timeout_steam: int = Field(default=30, ge=5, le=300, description="Timeout for Steam process termination (seconds)")
     timeout_srm: int = Field(default=120, ge=10, le=600, description="Timeout for SRM execution (seconds)")
     backup_shortcuts: bool = Field(default=True, description="Create backup of shortcuts before modification")
+    auto_close_on_success: bool = Field(default=False, description="Auto-close application after successful completion")
+    auto_close_delay: int = Field(default=5, ge=1, le=60, description="Delay in seconds before auto-close (1-60)")
     
     class Config:
         env_prefix = "SRM_"  # Environment variables like SRM_THEME, SRM_AUTO_START
