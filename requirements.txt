@@ -1,0 +1,18 @@
+# Steam ROM Manager GUI Automation - Dependencies
+
+# Core functionality improvements
+pydantic-settings>=2.8.0      # Configuration management with validation
+psutil>=5.9.0                # Cross-platform process and system utilities
+loguru>=0.7.0                # Modern logging with better formatting
+
+# Platform-appropriate directories
+platformdirs>=4.0.0           # Platform-appropriate directories
+
+# Optional dependencies for enhanced features
+sv-ttk>=2.6.0              # Windows 11 native theme support
+darkdetect>=0.8.0          # Automatic theme detection
+
+# Development dependencies (optional)
+# pytest>=7.0.0         # For running tests
+# black>=22.0.0          # Code formatting
+# mypy>=0.991            # Type checking
