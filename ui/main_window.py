@@ -341,7 +341,6 @@ class SteamROMManagerGUI:
             # Step 4: Complete
             if success:
                 elapsed = time.time() - start_time
-                self.update_progress(4, 100, "Process completed successfully!", "✓")
                 self.log_message("✓ Steam ROM Manager completed successfully!", LogLevel.SUCCESS)
                 self.log_message("✓ ROMs have been added to Steam", LogLevel.SUCCESS)
                 self.log_message(f"⏱ Total time: {elapsed:.1f}s", LogLevel.INFO)
@@ -350,6 +349,30 @@ class SteamROMManagerGUI:
                 self.logger.success(f"Automation process completed successfully in {elapsed:.1f}s")
                 if output:
                     self.logger.info(f"SRM output: {output}")
+                
+                # Step 5: Restart Steam if needed
+                restart_attempted = False
+                if (self.config.restart_steam_after_completion and 
+                    self.steam_manager.was_running_before_shutdown):
+                    
+                    self.update_progress(5, 90, "Restarting Steam...", "🔄")
+                    self.log_message("Step 5: Restarting Steam...", LogLevel.INFO)
+                    restart_attempted = True
+                    
+                    restart_success, restart_message = self.steam_manager.start_steam()
+                    if restart_success:
+                        self.log_message(f"✓ {restart_message}", LogLevel.SUCCESS)
+                        self.logger.success(f"Steam restart: {restart_message}")
+                    else:
+                        self.log_message(f"⚠ Steam restart failed: {restart_message}", LogLevel.WARNING)
+                        self.logger.warning(f"Steam restart failed: {restart_message}")
+                
+                # Final completion status
+                if restart_attempted:
+                    self.update_progress(5, 100, "Process completed successfully!", "✓")
+                else:
+                    self.update_progress(4, 100, "Process completed successfully!", "✓")
+                
                 self._update_status_indicator(ProcessStatus.SUCCESS)
                 
                 # Start auto-close countdown if enabled and not cancelled

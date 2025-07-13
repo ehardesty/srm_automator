@@ -21,6 +21,7 @@ class AppConfig(BaseSettings):
     backup_shortcuts: bool = Field(default=True, description="Create backup of shortcuts before modification")
     auto_close_on_success: bool = Field(default=False, description="Auto-close application after successful completion")
     auto_close_delay: int = Field(default=5, ge=1, le=60, description="Delay in seconds before auto-close (1-60)")
+    restart_steam_after_completion: bool = Field(default=True, description="Restart Steam after automation if it was originally running")
     
     class Config:
         env_prefix = "SRM_"  # Environment variables like SRM_THEME, SRM_AUTO_START

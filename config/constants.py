@@ -12,6 +12,9 @@ class Constants:
     # Steam process names to monitor and kill
     STEAM_PROCESSES = ['steam.exe', 'steamservice.exe', 'steamwebhelper.exe']
     
+    # Steam executable name for launching
+    STEAM_EXECUTABLE = 'steam.exe'
+    
     # Default timeout values in seconds
     DEFAULT_TIMEOUTS = {
         'steam_kill': 30,      # Timeout for killing Steam processes
@@ -39,10 +42,16 @@ class Constants:
         r"C:\Program Files (x86)\Steam ROM Manager\Steam ROM Manager.exe",
     ]
     
-    # Common Steam installation paths
+    # Common Steam installation paths (directories)
     COMMON_STEAM_PATHS = [
         r"C:\Program Files (x86)\Steam",
         r"C:\Program Files\Steam",
+    ]
+    
+    # Common Steam executable paths
+    COMMON_STEAM_EXECUTABLE_PATHS = [
+        r"C:\Program Files (x86)\Steam\steam.exe",
+        r"C:\Program Files\Steam\steam.exe",
     ]
     
     # Centralized log level and status color mappings

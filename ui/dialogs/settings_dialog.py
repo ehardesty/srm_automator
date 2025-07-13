@@ -24,6 +24,7 @@ class SettingsDialog:
         self.auto_start_var = None
         self.auto_close_var = None
         self.auto_close_delay_var = None
+        self.restart_steam_var = None
     
     def _validate_srm_path(self, path: str) -> Tuple[bool, str]:
         """Simple SRM path validation"""
@@ -60,7 +61,7 @@ class SettingsDialog:
         """Create the settings dialog window"""
         self.window = tk.Toplevel(self.parent)
         self.window.title("Settings")
-        self.window.geometry("500x375")
+        self.window.geometry("500x425")
         self.window.resizable(False, False)
         
         frame = ttk.Frame(self.window, padding="20")
@@ -93,7 +94,16 @@ class SettingsDialog:
             text="Auto-start process when application opens",
             variable=self.auto_start_var
         )
-        auto_start_check.pack(anchor=tk.W, pady=(0, 15))
+        auto_start_check.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Steam restart checkbox
+        self.restart_steam_var = tk.BooleanVar(value=self.config_manager.config.restart_steam_after_completion)
+        restart_steam_check = ttk.Checkbutton(
+            frame, 
+            text="Restart Steam after completion (if it was originally running)",
+            variable=self.restart_steam_var
+        )
+        restart_steam_check.pack(anchor=tk.W, pady=(0, 15))
         
         # Auto-close settings
         ttk.Label(frame, text="Auto-close Settings:").pack(anchor=tk.W, pady=(0, 5))
@@ -179,6 +189,7 @@ class SettingsDialog:
         self.config_manager.config.auto_start = self.auto_start_var.get()
         self.config_manager.config.auto_close_on_success = self.auto_close_var.get()
         self.config_manager.config.auto_close_delay = self.auto_close_delay_var.get()
+        self.config_manager.config.restart_steam_after_completion = self.restart_steam_var.get()
         
         success = self.config_manager.save_config()
         
@@ -186,6 +197,7 @@ class SettingsDialog:
             if self.logger:
                 self.logger(f"✓ Settings saved. SRM path: {new_path}", LogLevel.SUCCESS)
                 self.logger(f"✓ Auto-start: {'enabled' if self.auto_start_var.get() else 'disabled'}", LogLevel.SUCCESS)
+                self.logger(f"✓ Steam restart: {'enabled' if self.restart_steam_var.get() else 'disabled'}", LogLevel.SUCCESS)
                 if self.auto_close_var.get():
                     self.logger(f"✓ Auto-close enabled with {self.auto_close_delay_var.get()}s delay", LogLevel.SUCCESS)
                 else:
