@@ -44,109 +44,28 @@ def setup_basic_logging():
 
 
 def show_error_dialog(error_msg, detailed_error):
-    """Show enhanced but simpler error dialog"""
+    """Show simplified error dialog"""
     try:
-        # Create enhanced error dialog
+        # Try standard messagebox first
         root = tk.Tk()
-        root.title("Steam ROM Manager - Startup Error")
-        root.geometry("600x400")
-        root.configure(bg='#f0f0f0')
+        root.withdraw()  # Hide the root window
         
-        # Make it stay on top
-        root.attributes('-topmost', True)
+        # Combine messages for display
+        full_message = f"{error_msg}\n\nTechnical Details:\n{detailed_error[:500]}..."
+        if len(detailed_error) <= 500:
+            full_message = f"{error_msg}\n\nTechnical Details:\n{detailed_error}"
         
-        # Main frame
-        main_frame = tk.Frame(root, bg='#f0f0f0', padx=20, pady=20)
-        main_frame.pack(fill='both', expand=True)
-        
-        # Error title
-        title_label = tk.Label(
-            main_frame, 
-            text="Failed to start application:", 
-            font=('Arial', 12, 'bold'), 
-            fg='#d32f2f', 
-            bg='#f0f0f0'
+        messagebox.showerror(
+            "Steam ROM Manager - Startup Error",
+            full_message
         )
-        title_label.pack(anchor='w', pady=(0, 10))
-        
-        # Error message
-        error_label = tk.Label(
-            main_frame, 
-            text=error_msg,
-            font=('Arial', 10), 
-            fg='#000', 
-            bg='#f0f0f0', 
-            wraplength=550
-        )
-        error_label.pack(anchor='w', pady=(0, 15))
-        
-        # Details section
-        details_label = tk.Label(
-            main_frame, 
-            text="Technical Details:",
-            font=('Arial', 10, 'bold'), 
-            fg='#000', 
-            bg='#f0f0f0'
-        )
-        details_label.pack(anchor='w', pady=(0, 5))
-        
-        # Scrollable text for error details
-        text_widget = scrolledtext.ScrolledText(
-            main_frame, 
-            wrap=tk.WORD, 
-            font=('Consolas', 9),
-            height=15,
-            bg='white', 
-            fg='black'
-        )
-        text_widget.pack(fill='both', expand=True, pady=(0, 15))
-        text_widget.insert('1.0', detailed_error)
-        text_widget.configure(state='disabled')
-        
-        # OK button
-        def close_dialog():
-            root.destroy()
-        
-        ok_button = tk.Button(
-            main_frame, 
-            text="OK", 
-            command=close_dialog,
-            bg='#4caf50', 
-            fg='white', 
-            font=('Arial', 10), 
-            padx=30, 
-            pady=5
-        )
-        ok_button.pack(pady=5)
-        
-        # Center window
-        root.update_idletasks()
-        x = (root.winfo_screenwidth() // 2) - (600 // 2)
-        y = (root.winfo_screenheight() // 2) - (400 // 2)
-        root.geometry(f"600x400+{x}+{y}")
-        
-        # Keyboard shortcuts
-        root.bind('<Return>', lambda e: close_dialog())
-        root.bind('<Escape>', lambda e: close_dialog())
-        
-        # Focus and show
-        ok_button.focus_set()
-        root.mainloop()
+        root.destroy()
         
     except Exception:
-        # Simple fallback
-        try:
-            fallback_root = tk.Tk()
-            fallback_root.withdraw()
-            messagebox.showerror(
-                "Startup Error",
-                f"{error_msg}\n\nCheck error.log for detailed information."
-            )
-            fallback_root.destroy()
-        except Exception:
-            # Ultimate fallback - print to console
-            print(f"ERROR: {error_msg}")
-            print("Check error.log for details")
+        # Console fallback
+        print(f"ERROR: {error_msg}")
+        print(f"Details: {detailed_error}")
+        print("Check error.log for full details")
 
 
 def check_basic_dependencies():

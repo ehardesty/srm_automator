@@ -11,8 +11,8 @@ from utils.enums import LogLevel
 from config.app_dirs import app_dirs
 
 
-# Global log manager instance
-_log_manager: Optional['LogManager'] = None
+# Simple module-level logger reference
+_current_logger = logger
 
 
 class LogManager:
@@ -89,37 +89,25 @@ class LogManager:
 
 
 def setup_logging(log_level: str = "info", log_file: Optional[str] = None) -> LogManager:
-    """Simplified logging setup function
-    
-    Args:
-        log_level: Logging level (debug, info, warning, error)
-        log_file: Optional log file path (uses platform directory if None)
-        
-    Returns:
-        LogManager instance
-    """
-    global _log_manager
-    
+    """Simplified logging setup function"""
     # Use platform-appropriate log file if none specified
     if log_file is None:
         try:
             log_file = str(app_dirs.get_log_file_path())
         except Exception:
-            # Fallback to current directory
             log_file = "error.log"
     
-    _log_manager = LogManager(log_level=log_level, log_file=log_file)
+    log_manager = LogManager(log_level=log_level, log_file=log_file)
     
     # Add set_ui_callback method to logger for compatibility
     def set_ui_callback(callback: Callable):
-        if _log_manager:
-            _log_manager.set_ui_callback(callback)
+        log_manager.set_ui_callback(callback)
     
     logger.set_ui_callback = set_ui_callback
     
-    return _log_manager
+    return log_manager
 
 
 def get_logger():
     """Get the global logger instance"""
-    return logger
+    return _current_logger

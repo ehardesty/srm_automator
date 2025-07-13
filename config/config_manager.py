@@ -32,16 +32,12 @@ class ConfigManager:
         self.config = self.load_config()
     
     def _log(self, message: str, level_name: str = "ERROR"):
-        """Log message using provided logger or fallback to print
-        
-        Args:
-            message: The message to log
-            level_name: String name of the log level ('SUCCESS', 'ERROR', 'WARNING', 'INFO')
-        """
+        """Log message using provided logger or fallback to print"""
         if self.logger:
-            # Try to get the actual LogLevel enum, but fall back to string if not available
             try:
                 from utils.enums import LogLevel
+                from .constants import Constants
+                
                 level_map = {
                     'SUCCESS': LogLevel.SUCCESS,
                     'ERROR': LogLevel.ERROR,
@@ -50,12 +46,7 @@ class ConfigManager:
                 }
                 log_level = level_map.get(level_name, LogLevel.ERROR)
                 self.logger(message, log_level)
-            except (ImportError, AttributeError):
-                # If LogLevel import fails, just pass the message
-                # The logger function should handle it gracefully
-                self.logger(message)
             except Exception:
-                # If logger fails completely, fallback to print
                 print(f"Config: {message}")
         else:
             print(f"Config: {message}")

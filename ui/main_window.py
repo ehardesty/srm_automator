@@ -183,7 +183,6 @@ class SteamROMManagerGUI:
         if self.log_section:
             self.log_section.log_message(message, level)
             self.root.update_idletasks()
-            self.root.update_idletasks()
     
     def _log_config_message(self, message: str, level=None):
         """Log configuration-related messages to the main window"""
@@ -224,6 +223,9 @@ class SteamROMManagerGUI:
         self.status = status
         self.simple_components.update_status(status)
     
+    # ===== AUTO-CLOSE FUNCTIONALITY =====
+    # All auto-close related methods grouped together for better organization
+    
     def _update_title(self, suffix: str = ""):
         """Update window title with optional suffix"""
         if suffix:
@@ -242,7 +244,11 @@ class SteamROMManagerGUI:
         self.root.unbind_all('<KeyPress-Shift_R>')
     
     def _on_shift_press(self, event):
-        """Handle Shift key press to cancel auto-close"""
+        """Handle Shift key press to cancel auto-close
+        
+        This cancellation persists for the entire session - once cancelled,
+        auto-close won't activate again until the app is restarted.
+        """
         if not self.auto_close_cancelled and self.config.auto_close_on_success:
             self.auto_close_cancelled = True
             self._update_title("Auto-close OFF")
@@ -254,13 +260,22 @@ class SteamROMManagerGUI:
                 self.countdown_after_id = None
     
     def _start_auto_close_countdown(self):
-        """Start the auto-close countdown"""
+        """Start the auto-close countdown after successful completion
+        
+        Only triggers if:
+        - auto_close_on_success is enabled in config
+        - User hasn't cancelled auto-close for this session
+        - Process completed successfully (not on failures)
+        """
         self._countdown_step(self.config.auto_close_delay)
     
     def _countdown_step(self, seconds_left: int):
-        """Countdown step - called recursively"""
+        """Countdown step - called recursively every second
+        
+        Updates the title bar with remaining time and provides
+        visual feedback to the user about the impending auto-close.
+        """
         if self.auto_close_cancelled:
-            # Countdown was cancelled
             self.countdown_after_id = None
             return
         
@@ -276,6 +291,8 @@ class SteamROMManagerGUI:
         
         # Schedule next countdown step
         self.countdown_after_id = self.root.after(1000, lambda: self._countdown_step(seconds_left - 1))
+    
+    # ===== END AUTO-CLOSE FUNCTIONALITY =====
     def automation_process(self):
         """Main automation process"""
         start_time = time.time()

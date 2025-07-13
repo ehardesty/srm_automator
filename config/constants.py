@@ -44,3 +44,20 @@ class Constants:
         r"C:\Program Files (x86)\Steam",
         r"C:\Program Files\Steam",
     ]
+    
+    # Centralized log level and status color mappings
+    LOG_LEVEL_MAPPING = {
+        'SUCCESS': 'SUCCESS',
+        'ERROR': 'ERROR', 
+        'WARNING': 'WARNING',
+        'INFO': 'INFO'
+    }
+    
+    # UI Status colors
+    STATUS_COLORS = {
+        'ready': '#4caf50',      # Green
+        'running': '#ff9800',    # Orange
+        'success': '#4caf50',    # Green
+        'failed': '#f44336',     # Red
+        'warning': '#ff9800'     # Orange
+    }
